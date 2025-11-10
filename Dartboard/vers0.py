@@ -63,7 +63,7 @@ def score(params):
     result = throw*scoreboard
     return(np.sum(result))
 
-sigma_list = np.linspace(1,100,100)
+sigma_list = np.linspace(12,17,21)
 
 for sigma in sigma_list:
     throw0 = gaussian(X, Y, sigma, 0, 0)
@@ -78,7 +78,7 @@ for sigma in sigma_list:
                 opt = value
                 x_opt = x0
                 y_opt = y0
-    print('Streuung: ' + str(round(sigma)) + ' mm')      
+    print('Streuung: ' + str(round(sigma,2)) + ' mm')      
     print('Max Score ' + str(round(opt,3)) + ' at x = ' + str(round(x_opt,3)) + ' and y = ' + str(round(y_opt,2)))
     
     fig,ax = plt.subplots()
@@ -98,6 +98,6 @@ for sigma in sigma_list:
     circle_y = y_opt + sigma * np.sin(theta)
     
     plt.plot(circle_x, circle_y, color='red', linewidth=2)
-    plt.title('Streuung: ' + str(sigma) + ' mm')
+    plt.title('Streuung: ' + str(round(sigma,2)) + ' mm')
     
     plt.show()
