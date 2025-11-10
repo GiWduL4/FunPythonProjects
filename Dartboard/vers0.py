@@ -7,8 +7,13 @@ Created on Mon Nov 10 16:53:29 2025
 
 import numpy as np
 import matplotlib.pyplot as plt
-# from scipy.optimize import minimize
-from matplotlib.patches import Circle
+
+def shifting(array, shift_y, shift_x):
+    full_array = np.zeros(np.shape(array))
+    y1, y2 = max(0, shift_y), min(array.shape[0], array.shape[0]+shift_y)
+    x1, x2 = max(0, shift_x), min(array.shape[1], array.shape[1]+shift_x)
+    full_array[y1:y2, x1:x2] = array[y1-shift_y:y2-shift_y, x1-shift_x:x2-shift_x] 
+    return(full_array)
 
 def gaussian(x, y, sigma, x0, y0):
     A = np.exp(-(x-x0)**2/(2*sigma**2))* np.exp(-(y-y0)**2/(2*sigma**2))
@@ -46,51 +51,53 @@ factor[np.where((r<=rad_double[1]) * (r>rad_double[0]))] = 2
 factor[np.where((r<=rad_triple[1]) * (r>rad_triple[0]))] = 3
 scoreboard = scoreboard * factor
 scoreboard[np.where(r<= rad_single_bull)] = 25
-scoreboard[np.where(r<= rad_bull_eye)] = 80
+scoreboard[np.where(r<= rad_bull_eye)] = 50
 scoreboard[np.where(r> rad_double[1])] = 0
 
 
 def score(params):
     x0, y0 = params
-    throw = gaussian(X, Y, sigma, x0, y0)
+    shift_x_px = int(x0/dx)
+    shift_y_px = int(y0/dx)
+    throw = shifting(throw0, shift_y_px, shift_x_px)#gaussian(X, Y, sigma, x0, y0)
     result = throw*scoreboard
     return(np.sum(result))
 
-sigma = 7
+sigma_list = np.linspace(1,100,100)
 
-
-opt = 0
-x_opt = None
-y_opt = None
-for k, x0 in enumerate(x):
-    print(str(k) + '/' + str(len(x)))
-    for y0 in y:
-        value = score([x0,y0])
-        if value >= opt:
-            opt = value
-            x_opt = x0
-            y_opt = y0
-            
-print('Max Score ' + str(round(opt,3)) + ' at x = ' + str(round(x_opt,3)) + ' and y = ' + str(round(y_opt,2)))
-
-fig,ax = plt.subplots()
-
-extent_xy = [x[0]-0.5*dx, x[-1]+0.5*dx, y[0]-0.5*dy, y[-1]+0.5*dy]
-
-imxy = ax.imshow(scoreboard,
-                    cmap='gray',
-                    origin='lower',
-                    aspect=1,
-                    extent=extent_xy)
-
-ax.scatter(x_opt, y_opt, color='red', marker='x', s=100)
-
-theta = np.linspace(0, 2*np.pi, 100)
-circle_x = x_opt + sigma * np.cos(theta)
-circle_y = y_opt + sigma * np.sin(theta)
-
-plt.plot(circle_x, circle_y, color='blue', linewidth=2)
-circle = Circle((x0, y0), sigma, edgecolor='red', facecolor='none', linewidth=2)
-plt.title('Streuung: ' + str(sigma) + ' mm')
-
-plt.show()
+for sigma in sigma_list:
+    throw0 = gaussian(X, Y, sigma, 0, 0)
+    opt = 0
+    x_opt = None
+    y_opt = None
+    for k, x0 in enumerate(x):
+        # print(str(k) + '/' + str(len(x)))
+        for y0 in y:
+            value = score([x0,y0])
+            if value >= opt:
+                opt = value
+                x_opt = x0
+                y_opt = y0
+    print('Streuung: ' + str(round(sigma)) + ' mm')      
+    print('Max Score ' + str(round(opt,3)) + ' at x = ' + str(round(x_opt,3)) + ' and y = ' + str(round(y_opt,2)))
+    
+    fig,ax = plt.subplots()
+    
+    extent_xy = [x[0]-0.5*dx, x[-1]+0.5*dx, y[0]-0.5*dy, y[-1]+0.5*dy]
+    
+    imxy = ax.imshow(scoreboard,
+                        cmap='gray',
+                        origin='lower',
+                        aspect=1,
+                        extent=extent_xy)
+    
+    ax.scatter(x_opt, y_opt, color='red', marker='x', s=100)
+    
+    theta = np.linspace(0, 2*np.pi, 50)
+    circle_x = x_opt + sigma * np.cos(theta)
+    circle_y = y_opt + sigma * np.sin(theta)
+    
+    plt.plot(circle_x, circle_y, color='red', linewidth=2)
+    plt.title('Streuung: ' + str(sigma) + ' mm')
+    
+    plt.show()
