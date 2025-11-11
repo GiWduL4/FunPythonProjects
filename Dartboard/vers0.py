@@ -22,9 +22,9 @@ def gaussian(x, y, sigma, x0, y0):
     A = np.exp(-(x-x0)**2/(2*sigma**2))* np.exp(-(y-y0)**2/(2*sigma**2))
     return(A/np.sum(A))
 
-x = np.linspace(-250, 250, 201) # position in mm
+x = np.linspace(-200, 200, 401) # position in mm
 dx =  x[1] - x[0]
-y = np.linspace(-250, 250, 201) # position in mm
+y = np.linspace(-200, 200, 401) # position in mm
 dy = y[1] -y[0]
 
 X,Y = np.meshgrid(x,y)
@@ -45,13 +45,11 @@ numbers = numbers[10:]+numbers[:10] # rotating necessary due to np.arctan2's pha
 scoreboard = np.zeros_like(r)
 for i, num in enumerate(numbers):
     if i == 0:
-        j = 20    
+        j = 20      # necessary for first index due to phase jump    
     else:
         j = i
     ind = np.where((phi+np.pi + seg/2> i*seg)*(phi + np.pi + seg/2<= (j+1)*seg))
     scoreboard[ind]=numbers[i]
-# ind = np.where((phi+np.pi+seg/2> 20*seg))    
-# scoreboard[ind]=numbers[0]
 factor = np.ones_like(r)
 factor[np.where((r<=rad_double[1]) * (r>rad_double[0]))] = 2
 factor[np.where((r<=rad_triple[1]) * (r>rad_triple[0]))] = 3
@@ -71,9 +69,9 @@ def score(params):
 
 sigma_list = np.linspace(1e-9,120,25)
 
-p = 0.91
+p = 0.1
 sigma = rad_single_bull / (np.sqrt(-2*np.log(1-p)))
-sigma_list = [sigma]
+# sigma_list = [sigma]
 
 for sigma in sigma_list:
     throw0 = gaussian(X, Y, sigma, 0, 0)
@@ -89,6 +87,7 @@ for sigma in sigma_list:
                 opt = value
                 x_opt = x0
                 y_opt = y0
+    print('')
     print('Calculation Time: ' + str(round(time.time()-start_time,3)) + ' s')         
     print('Streuung: ' + str(round(sigma,2)) + ' mm')      
     print('Max Score: ' + str(round(opt,3)) + ' at x = ' + str(round(x_opt,3)) + ' and y = ' + str(round(y_opt,2)) + '\n')
@@ -98,7 +97,7 @@ for sigma in sigma_list:
     extent_xy = [x[0]-0.5*dx, x[-1]+0.5*dx, y[0]-0.5*dy, y[-1]+0.5*dy]
     
     imxy = ax.imshow(scoreboard,
-                        cmap='jet',
+                        cmap='inferno',
                         origin='lower',
                         aspect=1,
                         extent=extent_xy)
