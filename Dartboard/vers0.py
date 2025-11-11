@@ -6,8 +6,9 @@ Created on Mon Nov 10 16:53:29 2025
 """
 
 import numpy as np
-import scipy.special as ss
 import matplotlib.pyplot as plt
+from tqdm import tqdm
+import time
 
 
 def shifting(array, shift_y, shift_x):
@@ -21,12 +22,12 @@ def gaussian(x, y, sigma, x0, y0):
     A = np.exp(-(x-x0)**2/(2*sigma**2))* np.exp(-(y-y0)**2/(2*sigma**2))
     return(A/np.sum(A))
 
-x = np.linspace(-250, 250, 1001) # position in mm
+x = np.linspace(-250, 250, 201) # position in mm
 dx =  x[1] - x[0]
-y = np.linspace(-250, 250, 1001) # position in mm
+y = np.linspace(-250, 250, 201) # position in mm
 dy = y[1] -y[0]
 
-X,Y = np.meshgrid(x,y)
+Y,X = np.meshgrid(x,y)
 
 r = np.sqrt((X)**2 + (Y)**2)
 phi = np.arctan2(Y, X)
@@ -45,11 +46,11 @@ for i, num in enumerate(numbers):
     # i = i-10
     ind = np.where((phi+np.pi> i*seg-seg/2)*(phi+np.pi<= i*seg+seg/2))
     # print(i)
-    scoreboard[ind]=num
+    scoreboard[ind]=numbers[i-10]
 ind = np.where((phi> 10*seg-seg/2))    
-scoreboard[ind]=numbers[0]
-scoreboard = np.swapaxes(scoreboard, 0, 1)
-scoreboard = np.flip(scoreboard)
+scoreboard[ind]=numbers[0-10]
+# scoreboard = np.swapaxes(scoreboard, 0, 1)
+# scoreboard = np.flip(scoreboard)
 factor = np.ones_like(r)
 factor[np.where((r<=rad_double[1]) * (r>rad_double[0]))] = 2
 factor[np.where((r<=rad_triple[1]) * (r>rad_triple[0]))] = 3
@@ -69,29 +70,30 @@ def score(params):
 
 sigma_list = np.linspace(1e-9,120,25)
 
-p = 0.1
+p = 0.91
 sigma = rad_single_bull / (np.sqrt(-2*np.log(1-p)))
-sigma_list = [sigma]
+# sigma_list = [sigma]
 
 for sigma in sigma_list:
     throw0 = gaussian(X, Y, sigma, 0, 0)
     opt = 0
     x_opt = None
     y_opt = None
-    step = 0.01
-    for k, x0 in enumerate(x):
-        print(str(k) + '/' + str(len(x)))
+    step = 0.1
+    start_time = time.time()
+    for k, x0 in enumerate(tqdm(x, desc="Processing")):
+        # print(str(k) + '/' + str(len(x)))
         for y0 in y:
             value = score([x0,y0])
             if value >= opt:
                 opt = value
                 x_opt = x0
                 y_opt = y0
-        progress = (k+1)/len(x)
-        if progress >= step:
-            print('Progress: ' + str(round(progress*100,3)) + ' %')
-            step += 0.01
-                
+        # progress = (k+1)/len(x)
+        # if progress >= step:
+        #      print('Progress: ' + str(round(progress*100,3)) + ' %')
+        #      step += 0.1
+    print('Calculation Time: ' + str(round(time.time()-start_time,3)) + ' s')         
     print('Streuung: ' + str(round(sigma,2)) + ' mm')      
     print('Max Score: ' + str(round(opt,3)) + ' at x = ' + str(round(x_opt,3)) + ' and y = ' + str(round(y_opt,2)))
     
