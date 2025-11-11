@@ -21,9 +21,9 @@ def gaussian(x, y, sigma, x0, y0):
     A = np.exp(-(x-x0)**2/(2*sigma**2))* np.exp(-(y-y0)**2/(2*sigma**2))
     return(A/np.sum(A))
 
-x = np.linspace(-250, 250, 501) # position in mm
+x = np.linspace(-250, 250, 1001) # position in mm
 dx =  x[1] - x[0]
-y = np.linspace(-250, 250, 501) # position in mm
+y = np.linspace(-250, 250, 1001) # position in mm
 dy = y[1] -y[0]
 
 X,Y = np.meshgrid(x,y)
@@ -62,7 +62,7 @@ scoreboard[np.where(r> rad_double[1])] = 0
 def score(params):
     x0, y0 = params
     shift_x_px = int(x0/dx)
-    shift_y_px = int(y0/dx)
+    shift_y_px = int(y0/dy)
     throw = shifting(throw0, shift_y_px, shift_x_px)#gaussian(X, Y, sigma, x0, y0)
     result = throw*scoreboard
     return(np.sum(result))
@@ -78,6 +78,7 @@ for sigma in sigma_list:
     opt = 0
     x_opt = None
     y_opt = None
+    step = 0.01
     for k, x0 in enumerate(x):
         print(str(k) + '/' + str(len(x)))
         for y0 in y:
@@ -86,6 +87,11 @@ for sigma in sigma_list:
                 opt = value
                 x_opt = x0
                 y_opt = y0
+        progress = (k+1)/len(x)
+        if progress >= step:
+            print('Progress: ' + str(round(progress*100,3)) + ' %')
+            step += 0.01
+                
     print('Streuung: ' + str(round(sigma,2)) + ' mm')      
     print('Max Score: ' + str(round(opt,3)) + ' at x = ' + str(round(x_opt,3)) + ' and y = ' + str(round(y_opt,2)))
     
