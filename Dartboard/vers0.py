@@ -27,10 +27,10 @@ dx =  x[1] - x[0]
 y = np.linspace(-250, 250, 201) # position in mm
 dy = y[1] -y[0]
 
-Y,X = np.meshgrid(x,y)
+X,Y = np.meshgrid(x,y)
 
 r = np.sqrt((X)**2 + (Y)**2)
-phi = np.arctan2(Y, X)
+phi = np.arctan2(X, Y)
 
 seg = 2*np.pi/20
 rad_bull_eye = 6.35
@@ -41,16 +41,17 @@ numbers = [20,1,18,4,13,6,10,15,2,17,3,19,7,16,8,11,14,9,12,5]
 bull2 = 50
 bull1 = 25
 
+numbers = numbers[10:]+numbers[:10] # rotating necessary due to np.arctan2's phase jump at (x=0, y=-1)
 scoreboard = np.zeros_like(r)
 for i, num in enumerate(numbers):
-    # i = i-10
-    ind = np.where((phi+np.pi> i*seg-seg/2)*(phi+np.pi<= i*seg+seg/2))
-    # print(i)
-    scoreboard[ind]=numbers[i-10]
-ind = np.where((phi> 10*seg-seg/2))    
-scoreboard[ind]=numbers[0-10]
-# scoreboard = np.swapaxes(scoreboard, 0, 1)
-# scoreboard = np.flip(scoreboard)
+    if i == 0:
+        j = 20    
+    else:
+        j = i
+    ind = np.where((phi+np.pi + seg/2> i*seg)*(phi + np.pi + seg/2<= (j+1)*seg))
+    scoreboard[ind]=numbers[i]
+# ind = np.where((phi+np.pi+seg/2> 20*seg))    
+# scoreboard[ind]=numbers[0]
 factor = np.ones_like(r)
 factor[np.where((r<=rad_double[1]) * (r>rad_double[0]))] = 2
 factor[np.where((r<=rad_triple[1]) * (r>rad_triple[0]))] = 3
@@ -72,7 +73,7 @@ sigma_list = np.linspace(1e-9,120,25)
 
 p = 0.91
 sigma = rad_single_bull / (np.sqrt(-2*np.log(1-p)))
-# sigma_list = [sigma]
+sigma_list = [sigma]
 
 for sigma in sigma_list:
     throw0 = gaussian(X, Y, sigma, 0, 0)
@@ -82,27 +83,22 @@ for sigma in sigma_list:
     step = 0.1
     start_time = time.time()
     for k, x0 in enumerate(tqdm(x, desc="Processing")):
-        # print(str(k) + '/' + str(len(x)))
         for y0 in y:
             value = score([x0,y0])
             if value >= opt:
                 opt = value
                 x_opt = x0
                 y_opt = y0
-        # progress = (k+1)/len(x)
-        # if progress >= step:
-        #      print('Progress: ' + str(round(progress*100,3)) + ' %')
-        #      step += 0.1
     print('Calculation Time: ' + str(round(time.time()-start_time,3)) + ' s')         
     print('Streuung: ' + str(round(sigma,2)) + ' mm')      
-    print('Max Score: ' + str(round(opt,3)) + ' at x = ' + str(round(x_opt,3)) + ' and y = ' + str(round(y_opt,2)))
+    print('Max Score: ' + str(round(opt,3)) + ' at x = ' + str(round(x_opt,3)) + ' and y = ' + str(round(y_opt,2)) + '\n')
     
     fig,ax = plt.subplots()
     
     extent_xy = [x[0]-0.5*dx, x[-1]+0.5*dx, y[0]-0.5*dy, y[-1]+0.5*dy]
     
     imxy = ax.imshow(scoreboard,
-                        cmap='gray',
+                        cmap='jet',
                         origin='lower',
                         aspect=1,
                         extent=extent_xy)
