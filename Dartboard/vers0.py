@@ -6,7 +6,9 @@ Created on Mon Nov 10 16:53:29 2025
 """
 
 import numpy as np
+import scipy.special as ss
 import matplotlib.pyplot as plt
+
 
 def shifting(array, shift_y, shift_x):
     full_array = np.zeros(np.shape(array))
@@ -19,9 +21,9 @@ def gaussian(x, y, sigma, x0, y0):
     A = np.exp(-(x-x0)**2/(2*sigma**2))* np.exp(-(y-y0)**2/(2*sigma**2))
     return(A/np.sum(A))
 
-x = np.linspace(-250, 250, 201) # position in mm
+x = np.linspace(-250, 250, 501) # position in mm
 dx =  x[1] - x[0]
-y = np.linspace(-250, 250, 201) # position in mm
+y = np.linspace(-250, 250, 501) # position in mm
 dy = y[1] -y[0]
 
 X,Y = np.meshgrid(x,y)
@@ -35,6 +37,8 @@ rad_single_bull = 15.9
 rad_triple = [99,107]
 rad_double = [162,170]
 numbers = [20,1,18,4,13,6,10,15,2,17,3,19,7,16,8,11,14,9,12,5]
+bull2 = 50
+bull1 = 25
 
 scoreboard = np.zeros_like(r)
 for i, num in enumerate(numbers):
@@ -50,8 +54,8 @@ factor = np.ones_like(r)
 factor[np.where((r<=rad_double[1]) * (r>rad_double[0]))] = 2
 factor[np.where((r<=rad_triple[1]) * (r>rad_triple[0]))] = 3
 scoreboard = scoreboard * factor
-scoreboard[np.where(r<= rad_single_bull)] = 25
-scoreboard[np.where(r<= rad_bull_eye)] = 50
+scoreboard[np.where(r<= rad_single_bull)] = bull1
+scoreboard[np.where(r<= rad_bull_eye)] = bull2
 scoreboard[np.where(r> rad_double[1])] = 0
 
 
@@ -63,7 +67,11 @@ def score(params):
     result = throw*scoreboard
     return(np.sum(result))
 
-sigma_list = np.linspace(12,17,21)
+sigma_list = np.linspace(1e-9,120,25)
+
+p = 0.1
+sigma = rad_single_bull / (np.sqrt(-2*np.log(1-p)))
+sigma_list = [sigma]
 
 for sigma in sigma_list:
     throw0 = gaussian(X, Y, sigma, 0, 0)
@@ -71,7 +79,7 @@ for sigma in sigma_list:
     x_opt = None
     y_opt = None
     for k, x0 in enumerate(x):
-        # print(str(k) + '/' + str(len(x)))
+        print(str(k) + '/' + str(len(x)))
         for y0 in y:
             value = score([x0,y0])
             if value >= opt:
@@ -79,7 +87,7 @@ for sigma in sigma_list:
                 x_opt = x0
                 y_opt = y0
     print('Streuung: ' + str(round(sigma,2)) + ' mm')      
-    print('Max Score ' + str(round(opt,3)) + ' at x = ' + str(round(x_opt,3)) + ' and y = ' + str(round(y_opt,2)))
+    print('Max Score: ' + str(round(opt,3)) + ' at x = ' + str(round(x_opt,3)) + ' and y = ' + str(round(y_opt,2)))
     
     fig,ax = plt.subplots()
     
